@@ -50,7 +50,6 @@ I used the vulnerability to obtain command execution on the target and establish
 
 ### Initial Foothold
 
-
 After obtaining command execution, I established a reverse shell to the attacker machine. The shell was running as the `mcp-dev` user.
 
 I then began enumerating the internal services because the initial nmap scan only exposed SSH and HTTP externally. I used [linpeas](https://github.com/peass-ng/PEASS-ng/tree/master/linPEAS) to do so.
@@ -130,6 +129,8 @@ HIDDEN_TOOLS = {
 }
 ```
 
+Examining the implementation of ops._admin_dump showed that the target parameter could be set to ssh_keys. When confirm=true was provided, the function attempted to read /root/.ssh/id_rsa and return its contents:
+
 ```
 elif tool_name == "ops._admin_dump":
         target = args.get('target', '')
@@ -158,19 +159,16 @@ elif tool_name == "ops._admin_dump":
                 })
 ```
 
-This showed that `ops._admin_dump` was intentionally hidden from normal tool enumeration but remained callable through `/tools/call`.
+This confirmed that ops._admin_dump was intentionally excluded from normal tool enumeration but remained accessible through the /tools/call endpoint.
 
-The hidden administrative functionality ultimately provided access to the root user's SSH private key.
+Calling the hidden function with the ssh_keys target exposed the root user's private SSH key, providing the credentials required to establish SSH access as root.
 
-### SSH Access
-
-After obtaining the required SSH key material, I prepared the key and used it for SSH authentication.
-
-The private key was saved locally and validated using:
-
-```bash
-ssh-keygen -y -f ssh_key
+Using this command, the SSH keys were found.
 ```
+curl -X POST http://127.0.0.1:5000/tools/call -H "X-API-Key: opsmcp_secret_key_4f5a6b7c8d9e0f1a" -H "Content-Type: application/json" -d '{"name":"ops._admin_dump", "arguments": {"confirm":true,"target":"ssh_keys"}}' | jq -r '.root_private_key' > ssh_key
+```
+
+![Image Alt](https://github.com/mfahdk/DevHub/tree/main/Screenshot/root.png)
 
 After correcting the key formatting and permissions:
 
@@ -184,7 +182,7 @@ I was able to use the key for SSH authentication:
 ssh -i ssh_key root@devhub.htb
 ```
 
-This provided privileged SSH access to the machine.
+Allowing me access to the root account, giving me the root flag.
 
 # Conclusion
 
