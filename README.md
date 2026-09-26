@@ -27,3 +27,17 @@ Which gave me port 22, and 80 open. Meaning the next step would be to conduct we
 Including subdomain enumeraiton. So, the next step was the check the webpage manually, after adding ``10.129.245.216    devhub.htb`` to /etc/hosts.
 
 ![Image Alt](https://github.com/mfahdk/DevHub/tree/main/Screenshot/1.png)
+
+Opening the webpage gives us some information, on the left-side it mentions an MCP Inspetcor instance is running port 6264. We will investigate that first.
+
+![Image Alt](https://github.com/mfahdk/DevHub/tree/main/Screenshot/2.png)
+
+Doing so, takes us to MCPJam v1.4.2 instance. Further reconnaisance shows us that this version is vulnerable to RCE, particularly the CVE is ``CVE-2026-23744``.
+
+### CVE-2026-23744
+
+CVE-2026-23744 is a critical remote code execution vulnerability affecting MCPJam Inspector versions 1.4.2 and earlier.
+
+The /api/mcp/connect endpoint accepts a serverConfig containing command and args without authentication or adequate security checks. Since MCPJam Inspector binds to 0.0.0.0 by default, the endpoint can be remotely reached and a crafted HTTP request can trigger arbitrary command execution.
+
+The vulnerability requires no authentication or user interaction and is classified as CWE-306 (Missing Authentication for Critical Function). The vulnerability was fixed in version 1.4.3.
