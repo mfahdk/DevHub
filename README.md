@@ -50,7 +50,7 @@ I used the vulnerability to obtain command execution on the target and establish
 
 ### Initial Foothold
 
-After obtaining command execution, I established a reverse shell to the attacker machine. The shell was running as the `mcp-dev` user.
+Using the PoC from [here](https://github.com/suljov/CVE-2026-23744-Remote-Code-Execution-POC), I established a reverse shell to the attacker machine. The shell was running as the `mcp-dev` user.
 
 I then began enumerating the internal services because the initial nmap scan only exposed SSH and HTTP externally. I used [linpeas](https://github.com/peass-ng/PEASS-ng/tree/master/linPEAS) to do so.
 
